@@ -1,0 +1,15 @@
+# .gitignore
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Django files
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+media

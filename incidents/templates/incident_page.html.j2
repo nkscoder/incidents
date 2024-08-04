@@ -1,0 +1,160 @@
+{% extends "base.html.j2" %}
+
+{% block title %} Incident Management
+{% endblock %}
+
+{% block content %}
+ <div class="container mt-5">
+        <h1 class="mb-4">Incident Management</h1>
+
+        <form id="incidentForm" class="mb-4">
+            <div class="form-group">
+                <label for="enterprise_or_government">Enterprise or Government:</label>
+                <input type="text" class="form-control" id="enterprise_or_government" name="enterprise_or_government" required>
+            </div>
+
+            <div class="form-group">
+                <label for="reporter_name">Reporter Name:</label>
+                <input type="text" class="form-control" id="reporter_name" name="reporter_name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="incident_details">Incident Details:</label>
+                <textarea class="form-control" id="incident_details" name="incident_details" rows="4" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="priority">Priority:</label>
+                <select class="form-control" id="priority" name="priority" required>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="status">Status:</label>
+                <select class="form-control" id="status" name="status" required>
+                    <option value="Open">Open</option>
+                    <option value="In progress">In progress</option>
+                    <option value="Closed">Closed</option>
+                </select>
+            </div>
+            <input type="hidden" id="incidentId" name="incidentId">
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+
+        <h2 class="mb-4">Existing Incidents</h2>
+        <table class="table table-striped" id="incidentTable">
+            <thead>
+                <tr>
+                    <th>Incident ID</th>
+                    <th>Enterprise/Government</th>
+                    <th>Reporter Name</th>
+                    <th>Details</th>
+                    <th>Reported Datetime</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+{% endblock %}
+
+
+
+
+{% block footer_script %}
+
+    <script>
+ 
+$(document).ready(function() {
+    loadIncidents();
+
+    $('#incidentForm').on('submit', function(e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        var incidentId = $('#incidentId').val();
+        var type = incidentId ? 'PUT' : 'POST'; // Use PUT for update, POST for create
+        var url = incidentId ? `/api/incidents/${incidentId}/` : '{% url "incident-list-create" %}';
+
+        $.ajax({
+            type: type,
+            url: url,
+            data: formData,
+            headers: {
+                'Authorization': 'Token ' + localStorage.getItem('token')
+            },
+            success: function(response) {
+                alert('Incident ' + (incidentId ? 'updated' : 'created') + ' successfully!');
+                $('#incidentForm')[0].reset();
+                $('#incidentId').val(''); // Clear hidden field
+                loadIncidents(); // Reload incidents
+            },
+            error: function(response) {
+                alert('Failed to ' + (incidentId ? 'update' : 'create') + ' incident! Please try again.');
+            }
+        });
+    });
+});
+
+function loadIncidents() {
+    $.ajax({
+        type: 'GET',
+        url: '{% url "incident-list-create" %}',
+        headers: {
+            'Authorization': 'Token ' + localStorage.getItem('token')
+        },
+        success: function(response) {
+            var tbody = $('#incidentTable tbody');
+            tbody.empty();
+            response.forEach(function(incident) {
+                tbody.append(
+                    `<tr>
+                        <td>${incident.incident_id}</td>
+                        <td>${incident.enterprise_or_government}</td>
+                        <td>${incident.reporter_name}</td>
+                        <td>${incident.incident_details}</td>
+                        <td>${incident.reported_datetime}</td>
+                        <td>${incident.priority}</td>
+                        <td>${incident.status}</td>
+                        <td><button class="btn btn-warning btn-sm" onclick="editIncident(${incident.id})">Edit</button></td>
+                    </tr>`
+                );
+            });
+        },
+        error: function(response) {
+            alert('Failed to load incidents!');
+        }
+    });
+}
+
+function editIncident(id) {
+    $.ajax({
+        type: 'GET',
+        url: `/api/incidents/${id}/`,
+        headers: {
+            'Authorization': 'Token ' + localStorage.getItem('token')
+        },
+        success: function(response) {
+            $('#incidentId').val(response.id);
+            $('#enterprise_or_government').val(response.enterprise_or_government);
+            $('#reporter_name').val(response.reporter_name);
+            $('#incident_details').val(response.incident_details);
+            $('#priority').val(response.priority);
+            $('#status').val(response.status);
+        },
+        error: function(response) {
+            alert('Failed to load incident details!');
+        }
+    });
+}
+
+    </script>
+{% endblock %}
+
+
+   

@@ -1,0 +1,57 @@
+{% extends "base.html.j2" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+    <h2>Login</h2>
+    <form  id="loginForm">
+       {% csrf_token %}
+    {% if messages %}
+        <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="username" class="form-control" name="username" id="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" class="form-control" name="password" id="password" required>
+        </div>
+        <button type="submit"  class="btn btn-primary">Login</button>
+    </form>
+{% endblock %}
+
+
+
+
+{% block footer_script %}
+ <script>
+      $(document).ready(function() {
+    $('#loginForm').on('submit', function(e) {
+        e.preventDefault();
+        var formData = $(this).serialize();
+        console.log(formData);
+        $.ajax({
+            type: 'POST',
+            url: '{% url "login-user" %}',
+            data: formData,
+            success: function(response) {
+                alert('Login successful!');
+                // Store the token in local storage
+                localStorage.setItem('token', response.token);
+                // Redirect to the incident page
+                window.location.href = "{% url 'incident-page' %}";
+                
+            },
+            error: function(response) {
+                alert('Login failed! Please try again.');
+            }
+        });
+    });
+});
+    </script>   
+{% endblock %}
